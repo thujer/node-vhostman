@@ -1,0 +1,7 @@
+.idea
+config
+node_modules
+my_modules
+!config/db-example
+!config/redis-example
+package-lock.json

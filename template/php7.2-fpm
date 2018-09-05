@@ -1,0 +1,32 @@
+[{S_DOMAIN}]
+
+listen = 127.0.0.1:{S_SOCKET}
+
+listen.allowed_clients = 127.0.0.1
+
+listen.owner = www-data
+listen.group = www-data
+listen.mode = 0660
+
+user = www-data
+group = www-data
+
+pm = dynamic
+pm.max_children = 10
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 5
+pm.max_requests = 0
+
+chdir = /
+
+env[HOSTNAME] = $HOSTNAME
+env[TMP] = /tmp
+env[TMPDIR] = /tmp
+env[TEMP] = /tmp
+env[PATH] = {S_USER_DIR}/{S_DOMAIN}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+php_admin_value[open_basedir] = {S_USER_DIR}/{S_DOMAIN}/web:/tmp:/var/run/php
+php_admin_value[session.save_path] = /tmp
+php_admin_value[upload_tmp_dir] = /tmp
+php_admin_value[sendmail_path] = "/usr/sbin/sendmail -t -i -f tomas@hujer.eu"

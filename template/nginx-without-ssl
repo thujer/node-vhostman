@@ -1,0 +1,59 @@
+server {
+
+    listen [::]:80;
+    listen 80;
+
+    server_name {S_DOMAIN};
+
+    root   /var/www/{S_USER_DIR}/{S_DOMAIN}/web/;
+
+    index index.html index.htm index.php index.cgi index.pl index.xhtml;
+
+    error_log /var/www/{S_USER_DIR}/{S_DOMAIN}/log/nginx-error.log;
+    access_log /var/www/{S_USER_DIR}/{S_DOMAIN}/log/nginx-access.log combined;
+
+    location ~ /\. {
+        deny all;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        access_log off;
+        log_not_found off;
+        root /var/www/{S_USER_DIR}/{S_DOMAIN}/web/;
+        autoindex off;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+        expires max;
+        add_header Cache-Control "public, must-revalidate, proxy-revalidate";
+    }
+
+    location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+    }
+
+    location ~ \.php$ {
+        try_files /5620d9855f5bb769a60be51975fb247d.htm @php;
+    }
+
+    location @php {
+        try_files $uri =404;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass 127.0.0.1:{S_SOCKET};
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_intercept_errors on;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+}
+
