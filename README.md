@@ -120,5 +120,18 @@ Traverse all client directories and all domains (subdirectories) and create Ngin
 
 It's needed to remove all conflict configuration files before this action, otherwise it will not be created, but only printed to screen
 
+## Authors
 
+* **Tomas Hujer** - *Initial work* - [node-vhostman](https://github.com/node-vhostman)
 
+See also the list of [contributors](https://github.com/thujer/node-vhostman/contributors) who participated in this project.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+## Acknowledgments
+
+* First idea was write just simple appliacation to automated creating of Nginx and PHP-fpm configuration
+* This project was inspirated by [ISPConfig](https://www.ispconfig.org/) project website structure
+* Project was realized because some problems happens sometimes with [ISPConfig](https://www.ispconfig.org/) delayed write to configuration files by crontab and I must debug this problems for many times.  
