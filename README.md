@@ -126,6 +126,13 @@ It's needed to remove all conflict configuration files before this action, other
 
 See also the list of [contributors](https://github.com/thujer/node-vhostman/contributors) who participated in this project.
 
+## Big thanks
+[Inquirer](https://github.com/SBoudrias/Inquirer.js) for CLI interactive menus
+
+[Commander](https://github.com/tj/commander.js/) for CLI interface
+
+[Bluebird Promises](https://github.com/petkaantonov/bluebird/) for Promisify interface
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
