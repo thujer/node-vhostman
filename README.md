@@ -23,8 +23,17 @@
 
 
 ## Installation
-npm i -g vhostman
+```
+$ npm i -g vhostman
+```
 
+Alternavive the bad (but possible) way to install it if npm installation failed is bellow:
+```
+$ git clone https://github.com/thujer/node-vhostman
+$ cd node-vhostman/
+$ npm i -g .
+```
+ 
 ## Commands
 
 #### Create VHOST (cv)
@@ -129,7 +138,7 @@ See also the list of [contributors](https://github.com/thujer/node-vhostman/cont
 ## Big thanks
 [Inquirer](https://github.com/SBoudrias/Inquirer.js) for CLI interactive menus
 
-[Commander](https://github.com/tj/commander.js/) for CLI interface
+[Commander](https://github.com/tj/commander.js/) for CLI application command interface
 
 [Bluebird Promises](https://github.com/petkaantonov/bluebird/) for Promisify interface
 

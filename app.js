@@ -2,12 +2,11 @@
 
 const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
-const o_strip_accents = require('strip-accents');
 const o_userid = require('userid');
 require('colors');
 
 /* App properties */
-const o_app_package = require('../package.json');
+const o_app_package = require('./package.json');
 
 // https://github.com/SBoudrias/Inquirer.js/
 const { prompt } = require('inquirer'); // require inquirerjs library
@@ -46,7 +45,7 @@ Number.prototype.pad = function(size) {
  * @class NodeShop
  */
 
-class NodeHostingMan {
+class App {
 
     constructor() {
 
@@ -60,6 +59,104 @@ class NodeHostingMan {
             console.error(err)
         })
         */
+    }
+
+
+    /**
+     * Run app from command line
+     */
+    runCli() {
+        program
+            .version(o_app_package.version)
+            .description('Node Hosting Manager - interactive hosting configurator')
+        ;
+
+        program
+            .command('cv') // No need of specifying arguments here
+            .alias('create-vhost')
+            .description('Create vhost Nginx & Php-fpm config files')
+            .action(() => o_hostingman.createVhost());
+
+        program
+            .command('cl')
+            .alias('client-list')
+            .description('List of clients directories')
+            .action(() => o_hostingman.clientList());
+
+        program
+            .command('cwl')
+            .alias('client-web-list')
+            .description('List of client websites')
+            .action(() => o_hostingman.clientWebList());
+
+        program
+            .command('gfsp')
+            .alias('get-free-socket-port')
+            .description('Get first free socket port')
+            .action(() => o_hostingman.getFirstFreeSocket(true));
+
+        program
+            .command('cav')
+            .alias('create-all-vhost')
+            .description('Create all vhosts')
+            .action(() => o_hostingman.createAllVhost());
+
+        program
+            .command('le')
+            .alias('letsencrypt')
+            .description('Run Certbot for selected domain')
+            .action(() => o_hostingman.doLetsEncrypt());
+
+        if (!process.argv.slice(2).length) {
+            program.outputHelp();
+        }
+
+
+        program.parse(process.argv);
+
+    }
+
+    /**
+     * Remove accent from text
+     * @param s_str
+     * @returns string
+     */
+    static stripAccents(s_str) {
+
+        var in_chrs   = 'àáâãäčçďěèéêëìíîïñňńòóôõöřšùúûüůýÿžÀÁÂÃÄČÇĎĚÈÉÊËÌÍÎÏÑÒÓÔÕÖŘŠÙÚÛÜÝŽ',
+            out_chrs  = 'aaaaaccdeeeeeiiiinnnooooorsuuuuuyyzAAAAACCDEEEEEIIIINOOOOORSUUUUYZ',
+            chars_rgx = new RegExp('[' + in_chrs + ']', 'g'),
+            transl    = {}, i,
+            lookup    = function (m) { return transl[m] || m; };
+
+        for (i=0; i<in_chrs.length; i++) {
+            transl[ in_chrs[i] ] = out_chrs[i];
+        }
+
+        return s_str.replace(chars_rgx, lookup);
+    }
+
+
+    /**
+     * Remake s_name to alias by removing unwanted chars and switch to lower case
+     * @param {string} s_name - Name of item to generate SEO url from
+     * @returns {string} string with all non-printable chars replaced by minus and repeated chars removed
+     */
+    static makeAlias(s_name) {
+
+        let s_alias = App.stripAccents(s_name)
+            .toLowerCase()
+            .replace(/[^\x20-\x7E]+/g, ' ')
+            .replace(/[+]+/g, '-')
+            .replace(/[ ]+/g, '-')
+            .replace(/[\&]+/g, '-')
+            .replace(/[-]+/g, '-')
+            .replace(/-$/g, '')
+        ;
+
+        //console.log('StripAccents', s_name, s_alias);
+
+        return s_alias;
     }
 
 
@@ -401,7 +498,7 @@ class NodeHostingMan {
                                         }])
                                             .then((o_answer) => {
 
-                                                let s_client_dir = 'client-' + (nl_id_client_last + 1).pad(2) + '-' + o_strip_accents.makeAlias(o_answer.s_client_name);
+                                                let s_client_dir = 'client-' + (nl_id_client_last + 1).pad(2) + '-' + App.makeAlias(o_answer.s_client_name);
 
                                                 console.log('Client directory', s_client_dir);
 
@@ -547,56 +644,8 @@ class NodeHostingMan {
 
 }
 
-let o_hostingman = new NodeHostingMan();
+//let o_hostingman = new NodeHostingMan();
 
-
-program
-    .version(o_app_package.version)
-    .description('Node Hosting Manager - interactive hosting configurator')
-;
-
-program
-    .command('cv') // No need of specifying arguments here
-    .alias('create-vhost')
-    .description('Create vhost Nginx & Php-fpm config files')
-    .action(() => o_hostingman.createVhost());
-
-program
-    .command('cl')
-    .alias('client-list')
-    .description('List of clients directories')
-    .action(() => o_hostingman.clientList());
-
-program
-    .command('cwl')
-    .alias('client-web-list')
-    .description('List of client websites')
-    .action(() => o_hostingman.clientWebList());
-
-program
-    .command('gfsp')
-    .alias('get-free-socket-port')
-    .description('Get first free socket port')
-    .action(() => o_hostingman.getFirstFreeSocket(true));
-
-program
-    .command('cav')
-    .alias('create-all-vhost')
-    .description('Create all vhosts')
-    .action(() => o_hostingman.createAllVhost());
-
-program
-    .command('le')
-    .alias('letsencrypt')
-    .description('Run Certbot for selected domain')
-    .action(() => o_hostingman.doLetsEncrypt());
-
-if (!process.argv.slice(2).length) {
-    program.outputHelp();
-}
-
-
-program.parse(process.argv);
-
+module.exports = App;
 
 

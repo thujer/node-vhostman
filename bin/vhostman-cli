@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+var app = require('../app');
+
+let o_hostingman = new app();
+
+o_hostingman.runCli();
