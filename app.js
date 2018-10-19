@@ -10,8 +10,6 @@ const o_app_package = require('./package.json');
 
 // https://github.com/SBoudrias/Inquirer.js/
 const { prompt } = require('inquirer'); // require inquirerjs library
-const program = require('commander');
-
 
 // Clone Redis config and append some parameters
 /*
@@ -25,7 +23,7 @@ const o_mysql = new mysqlProc(o_config_mysql, o_config_redis_cache);
 const NL_PORT = 80;
 const NL_SOCKET_PORT_FIRST = 9000;
 
-const S_TEMPLATE_DIR = './template';
+const S_TEMPLATE_DIR = __dirname + '/template';
 const S_TEMPLATE_PHP7 = S_TEMPLATE_DIR + '/php7.2-fpm';
 
 const S_NGINX_TARGET = '/etc/nginx';
@@ -49,72 +47,8 @@ class App {
 
     constructor() {
 
-        let self = this;
-
-        /*
-        o_mysql.callProc('get_client_list', {
-        }).then(function(a_result) {
-            console.log(a_result)
-        }).catch(function(err) {
-            console.error(err)
-        })
-        */
     }
 
-
-    /**
-     * Run app from command line
-     */
-    runCli() {
-        program
-            .version(o_app_package.version)
-            .description('Node Hosting Manager - interactive hosting configurator')
-        ;
-
-        program
-            .command('cv') // No need of specifying arguments here
-            .alias('create-vhost')
-            .description('Create vhost Nginx & Php-fpm config files')
-            .action(() => o_hostingman.createVhost());
-
-        program
-            .command('cl')
-            .alias('client-list')
-            .description('List of clients directories')
-            .action(() => o_hostingman.clientList());
-
-        program
-            .command('cwl')
-            .alias('client-web-list')
-            .description('List of client websites')
-            .action(() => o_hostingman.clientWebList());
-
-        program
-            .command('gfsp')
-            .alias('get-free-socket-port')
-            .description('Get first free socket port')
-            .action(() => o_hostingman.getFirstFreeSocket(true));
-
-        program
-            .command('cav')
-            .alias('create-all-vhost')
-            .description('Create all vhosts')
-            .action(() => o_hostingman.createAllVhost());
-
-        program
-            .command('le')
-            .alias('letsencrypt')
-            .description('Run Certbot for selected domain')
-            .action(() => o_hostingman.doLetsEncrypt());
-
-        if (!process.argv.slice(2).length) {
-            program.outputHelp();
-        }
-
-
-        program.parse(process.argv);
-
-    }
 
     /**
      * Remove accent from text
@@ -160,6 +94,19 @@ class App {
     }
 
 
+    /**
+     * Returns application version from package.json
+     */
+    static getVersion() {
+        return o_app_package.version;
+    }
+
+
+    /**
+     * Create VHost configuration
+     * @param s_client_dir
+     * @param s_template
+     */
     createHostingWizard(s_client_dir, s_template) {
 
         var self = this;
@@ -387,7 +334,7 @@ class App {
 
         var self = this;
 
-        fs.readdirAsync('./template')
+        fs.readdirAsync(__dirname + '/template')
             .then((a_dir) => {
 
                 prompt([{
@@ -477,7 +424,7 @@ class App {
                 }])
                     .then(o_answer => {
 
-                        fs.readdirAsync('./template')
+                        fs.readdirAsync(__dirname + '/template')
                             .then((a_dir) => {
 
                                 prompt([{
@@ -642,9 +589,12 @@ class App {
 
     }
 
-}
+    
+    enableSSLConfiguration() {
 
-//let o_hostingman = new NodeHostingMan();
+    }
+
+}
 
 module.exports = App;
 

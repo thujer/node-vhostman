@@ -1,7 +1,69 @@
 #!/usr/bin/env node
 
-var app = require('../app');
+const App = require('../app');
+const program = require('commander');
 
-let o_hostingman = new app();
+let o_hostingman = new App();
 
-o_hostingman.runCli();
+// TODO: create class, move CLI routines from App to here
+
+/**
+ * Run app from command line
+ */
+program
+    .version(App.getVersion())
+    .description('Node Hosting Manager - interactive hosting configurator')
+;
+
+program
+    .command('cv') // No need of specifying arguments here
+    .alias('create-vhost')
+    .description('Create vhost Nginx & Php-fpm config files')
+    .action(() => o_hostingman.createVhost());
+
+program
+    .command('cl')
+    .alias('client-list')
+    .description('List of clients directories')
+    .action(() => o_hostingman.clientList());
+
+program
+    .command('cwl')
+    .alias('client-web-list')
+    .description('List of client websites')
+    .action(() => o_hostingman.clientWebList());
+
+program
+    .command('gfsp')
+    .alias('get-free-socket-port')
+    .description('Get first free socket port')
+    .action(() => o_hostingman.getFirstFreeSocket(true));
+
+program
+    .command('cav')
+    .alias('create-all-vhost')
+    .description('Create all vhosts')
+    .action(() => o_hostingman.createAllVhost());
+
+program
+    .command('se')
+    .alias('ssl-enable')
+    .description('Enable SSL configuration')
+    .action(() => o_hostingman.enableSSLConfiguration());
+
+/*
+program
+    .command('le')
+    .alias('letsencrypt')
+    .description('Run Certbot for selected domain')
+    .action(() => o_hostingman.doLetsEncrypt());
+*/
+
+if (!process.argv.slice(2).length) {
+    program.outputHelp();
+}
+
+program.parse(process.argv);
+
+
+
