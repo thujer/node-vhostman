@@ -3,6 +3,7 @@
 const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
 const o_userid = require('userid');
+const path = require('path');
 require('colors');
 
 /* App properties */
@@ -23,25 +24,15 @@ const o_mysql = new mysqlProc(o_config_mysql, o_config_redis_cache);
 const NL_PORT = 80;
 const NL_SOCKET_PORT_FIRST = 9000;
 
-const S_TEMPLATE_DIR = __dirname + '/template';
-const S_TEMPLATE_PHP7 = S_TEMPLATE_DIR + '/php7.2-fpm';
+const S_TEMPLATE_DIR = path.join(__dirname, '/template');
+const S_TEMPLATE_PHP7 = path.join(S_TEMPLATE_DIR, '/php7.2-fpm');
 
 const S_NGINX_TARGET = '/etc/nginx';
 const S_PHP7_TARGET = '/etc/php/7.2/fpm/pool.d';
 const S_CLIENT_DIR_BASE = '/var/www';
 const S_DIR_NGINX_CONFIG = '/etc/nginx/sites-available';
 
-Number.prototype.pad = function(size) {
-    var sign = Math.sign(this) === -1 ? '-' : '';
-    return sign + new Array(size).concat([Math.abs(this)]).join('0').slice(-size);
-};
 
-
-
-/**
- * Class representing eShop.
- * @class NodeShop
- */
 
 class App {
 
@@ -57,17 +48,30 @@ class App {
      */
     static stripAccents(s_str) {
 
-        var in_chrs   = 'àáâãäčçďěèéêëìíîïñňńòóôõöřšùúûüůýÿžÀÁÂÃÄČÇĎĚÈÉÊËÌÍÎÏÑÒÓÔÕÖŘŠÙÚÛÜÝŽ',
-            out_chrs  = 'aaaaaccdeeeeeiiiinnnooooorsuuuuuyyzAAAAACCDEEEEEIIIINOOOOORSUUUUYZ',
-            chars_rgx = new RegExp('[' + in_chrs + ']', 'g'),
-            transl    = {}, i,
-            lookup    = function (m) { return transl[m] || m; };
+        const in_chrs   = 'àáâãäčçďěèéêëìíîïñňńòóôõöřšùúûüůýÿžÀÁÂÃÄČÇĎĚÈÉÊËÌÍÎÏÑÒÓÔÕÖŘŠÙÚÛÜÝŽ';
+        const out_chrs  = 'aaaaaccdeeeeeiiiinnnooooorsuuuuuyyzAAAAACCDEEEEEIIIINOOOOORSUUUUYZ';
 
-        for (i=0; i<in_chrs.length; i++) {
+        const chars_rgx = new RegExp('[' + in_chrs + ']', 'g');
+        let transl = {};
+        let lookup = function (m) { return transl[m] || m; };
+
+        for (let i=0; i<in_chrs.length; i++) {
             transl[ in_chrs[i] ] = out_chrs[i];
         }
 
         return s_str.replace(chars_rgx, lookup);
+    }
+
+
+    /**
+     * Expand number with zeroes
+     * @param nl_value {Number} Value to expand by zeroes
+     * @param nl_size {Number} Wanted number size
+     * @returns {string}
+     */
+    static pad(nl_value, nl_size) {
+        const s_sign = Math.sign(nl_value) === -1 ? '-' : '';
+        return s_sign + new Array(nl_size).concat([Math.abs(nl_value)]).join('0').slice(-nl_size);
     }
 
 
@@ -78,7 +82,7 @@ class App {
      */
     static makeAlias(s_name) {
 
-        let s_alias = App.stripAccents(s_name)
+        const s_alias = App.stripAccents(s_name)
             .toLowerCase()
             .replace(/[^\x20-\x7E]+/g, ' ')
             .replace(/[+]+/g, '-')
@@ -109,7 +113,7 @@ class App {
      */
     createHostingWizard(s_client_dir, s_template) {
 
-        var self = this;
+        let self = this;
 
         self.getFirstFreeSocket()
             .then((nl_socket_port_free) => {
@@ -150,9 +154,9 @@ class App {
      */
     createHostingConfiguration(o_config, s_template_nginx, b_force = false) {
 
-        var self = this;
+        let self = this;
 
-        s_template_nginx = S_TEMPLATE_DIR + '/' + s_template_nginx;
+        s_template_nginx = path.join(S_TEMPLATE_DIR, s_template_nginx);
 
         let s_template_nginx_content = fs.readFileSync(s_template_nginx).toString();
         let s_template_php7_content = fs.readFileSync(S_TEMPLATE_PHP7).toString();
@@ -166,7 +170,7 @@ class App {
             .replace(/{S_SOCKET}/gi, o_config.s_socket)
         ;
 
-        let s_nginx_filename = S_NGINX_TARGET + '/sites-available/' + s_nginx_vhost_file;
+        let s_nginx_filename = path.join(S_NGINX_TARGET, 'sites-available', s_nginx_vhost_file);
         //let s_nginx_filename_backup = S_NGINX_TARGET + '/sites-available/backup/' + s_nginx_vhost_file;
         /*
         if(fs.existsSync(s_nginx_filename)) {
@@ -189,13 +193,13 @@ class App {
         }
 
         let s_php_content = s_template_php7_content
-            .replace(/{S_USER_DIR}/gi, S_CLIENT_DIR_BASE + '/' + o_config.s_client_dir)
+            .replace(/{S_USER_DIR}/gi, path.join(S_CLIENT_DIR_BASE, o_config.s_client_dir))
             .replace(/{S_DOMAIN}/gi, o_config.s_domain)
             .replace(/{NL_PORT}/gi, NL_PORT)
             .replace(/{S_SOCKET}/gi, o_config.s_socket)
         ;
 
-        let s_php_filename = S_PHP7_TARGET + '/' + s_nginx_vhost_file;
+        let s_php_filename = path.join(S_PHP7_TARGET, s_nginx_vhost_file);
         //let s_php_filename_backup = S_PHP7_TARGET + '/backup/' + s_nginx_vhost_file;
 
         /*
@@ -218,17 +222,19 @@ class App {
             console.log('File content:\n', s_php_content)
         }
 
-        if(!fs.existsSync(S_NGINX_TARGET + '/sites-enabled/' + s_nginx_vhost_file)) {
-            fs.symlinkSync('../sites-available/' + s_nginx_vhost_file, S_NGINX_TARGET + '/sites-enabled/' + s_nginx_vhost_file);
+        let s_vhost_file = path.join(S_NGINX_TARGET + '/sites-enabled/' + s_nginx_vhost_file);
+        if(!fs.existsSync(s_vhost_file)) {
+            fs.symlinkSync('../sites-available/' + s_nginx_vhost_file, s_vhost_file);
         }
 
-        let s_dir_nginx = '/var/www/' + o_config.s_client_dir + '/' + o_config.s_domain + '/nginx';
+        let s_dir_nginx = path.join('/var/www/', o_config.s_client_dir, o_config.s_domain, 'nginx');
         if(!fs.existsSync(s_dir_nginx)) {
             fs.mkdirSync(s_dir_nginx);
         }
 
-        if(!fs.existsSync(s_dir_nginx + '/' + s_nginx_vhost_file)) {
-            fs.symlinkSync(S_NGINX_TARGET + '/sites-enabled/' + s_nginx_vhost_file, s_dir_nginx + '/' + s_nginx_vhost_file);
+        let s_vhost_link = path.join(s_dir_nginx, s_nginx_vhost_file);
+        if(!fs.existsSync()) {
+            fs.symlinkSync(s_vhost_file, s_vhost_link);
         }
 
         let s_dir_php = '/var/www/' + o_config.s_client_dir + '/' + o_config.s_domain + '/php';
@@ -543,7 +549,7 @@ class App {
                             let s_content = fs.readFileSync(s_nginx_config_file);
 
                             let a_found = /server_name ([A-Z0-9. ]+)/gi.exec(s_content);
-                            let s_domain = a_found[1];
+                            const s_domain = a_found[1];
 
                             a_found = /root ([\/A-Z0-9.\-]+)/gi.exec(s_content);
                             console.log(s_domain, ':', a_found[1].replace('/web', '/ssl'));
@@ -552,9 +558,9 @@ class App {
 
                             if(a_domain.length) {
 
-                                let s_dir_root = a_found[1];
-                                let s_dir_ssl = s_dir_root.replace('/web', '/ssl');
-                                let s_dir_bash = s_dir_root.replace('/web', '/bash');
+                                const s_dir_root = a_found[1];
+                                const s_dir_ssl = s_dir_root.replace('/web', '/ssl');
+                                const s_dir_bash = s_dir_root.replace('/web', '/bash');
 
                                 var s_command = 'certbot certonly --authenticator standalone --installer nginx --webroot -w '+ s_dir_root + ' --logs-dir=./log';
 
@@ -589,7 +595,7 @@ class App {
 
     }
 
-    
+
     enableSSLConfiguration() {
 
     }
